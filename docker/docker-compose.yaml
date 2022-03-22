@@ -1,0 +1,40 @@
+version: "3.5"
+services:
+  poker-web:
+    image: carlschader/poker-web
+    depends_on:
+      - poker-api
+    ports:
+      - target: 80
+        published: 80
+    environment:
+    - PORT=80
+    - API_URL=http://poker-api:8080
+    networks:
+      - backend
+  poker-go-api:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    depends_on:
+      - mongo
+    networks:
+      - backend
+    environment:
+      - PORT=8080
+    ports:
+      - target: 8080
+        published: 8080
+  mongo:
+    image: mongo
+    ports:
+      - target: 27017
+        published: 27017
+    networks:
+      - backend
+    volumes:
+      - mongo:/data/db
+networks:
+  backend:
+volumes:
+  mongo:

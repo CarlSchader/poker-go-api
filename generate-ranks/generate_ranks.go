@@ -1,13 +1,14 @@
-package generateRanks
+package main
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"poker-api/src/algorithm"
 	"sort"
 	"time"
+
+	"github.com/carlschader/poker-go-api/server/algorithm"
 )
 
 func main() {

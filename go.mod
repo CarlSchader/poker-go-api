@@ -1,4 +1,4 @@
-module poker-api
+module github.com/carlschader/poker-go-api
 
 go 1.17
 

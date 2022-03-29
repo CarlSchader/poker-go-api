@@ -6,3 +6,4 @@ Makefile
 .gitignore
 LICENSE
 README.md
+vendor/

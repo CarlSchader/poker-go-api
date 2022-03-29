@@ -8,7 +8,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/carlschader/poker-go-api/server/algorithm"
+	"github.com/carlschader/poker-go-api/algorithm"
 )
 
 func main() {

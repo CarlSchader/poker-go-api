@@ -1,13 +1,16 @@
 USERNAME = carlschader
 
 run:
-	docker compose -f docker/docker-compose.yaml up --build
+	docker-compose up --build
 
 kill:
-	docker compose -f docker/docker-compose.yaml down
+	docker-compose down
 
 build:
-	docker build -t poker-go-api:latest -f docker/Dockerfile .
+	docker build -t poker-go-api:latest -f services/server/Dockerfile .
+
+build-create-ranks:
+	docker build -t poker-create-ranks:latest -f services/create-ranks/Dockerfile .
 
 publish:
 	docker login

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -12,6 +13,11 @@ import (
 )
 
 func main() {
+	if len(os.Args) < 2 {
+		fmt.Println(errors.New("must specify a file path for new file as command line argument"))
+		os.Exit(1)
+	}
+
 	start := time.Now()
 	deck := algorithm.MakeDeck(map[algorithm.Card]bool{})
 	unsortedMap := [10][]algorithm.Hand5{}

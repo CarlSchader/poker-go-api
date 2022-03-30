@@ -3,7 +3,7 @@ services:
   poker-web:
     image: carlschader/poker-web
     depends_on:
-      - poker-api
+      - poker-go-api
     ports:
       - target: 80
         published: 80
@@ -14,10 +14,11 @@ services:
       - backend
   poker-go-api:
     build:
-      context: ../
+      context: .
       dockerfile: docker/Dockerfile
     depends_on:
       - mongo
+      - create-ranks
     networks:
       - backend
     environment:
@@ -25,6 +26,18 @@ services:
     ports:
       - target: 8080
         published: 8080
+  create-ranks:
+    build:
+      context: .
+      dockerfile: services/create-ranks/Dockerfile
+    depends_on:
+      - mongo
+    networks:
+      - backend
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017
+      - DB_NAME=poker
+      - COLLECTION_NAME=ranks
   mongo:
     image: mongo
     ports:

@@ -18,7 +18,8 @@ import (
 func main() {
 	mongodbURI := os.Getenv("MONGODB_URI")
 	dbName := os.Getenv("DB_NAME")
-	collectionName := os.Getenv("COLLECTION_NAME")
+	collectionName := os.Getenv("RANKS_COLLECTION_NAME")
+	calcCollectionName := os.Getenv("CALCULATIONS_COLLECTION_NAME")
 	ranksFilePath := os.Args[1]
 
 	if len(os.Args) != 2 {
@@ -37,11 +38,31 @@ func main() {
 	}
 	defer client.Disconnect(ctx)
 
-	// get collection and create cardString index
+	// get collection and create handString index
 	collection := client.Database(dbName).Collection(collectionName)
-	collection.Indexes().CreateOne(ctx, mongo.IndexModel{
+	calcCollection := client.Database(dbName).Collection(calcCollectionName)
+	count, err := collection.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// exit if the ranks collection already has at least all the rank documents
+	if count >= 2598960 {
+		fmt.Println("ranks collection already populated")
+		os.Exit(0)
+	}
+
+	// collection.Indexes().CreateOne(ctx, mongo.IndexModel{
+	// 	Keys: bson.M{
+	// 		"hand": 1,
+	// 	},
+	// 	Options: nil,
+	// })
+
+	calcCollection.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys: bson.M{
-			"card": 1,
+			"hand":          1,
+			"end_hand_size": 1,
 		},
 		Options: nil,
 	})
@@ -57,8 +78,8 @@ func main() {
 
 	var ranksObjects []interface{}
 
-	for cardString, rank := range ranksMap {
-		ranksObjects = append(ranksObjects, bson.M{"card": cardString, "rank": rank})
+	for handString, rank := range ranksMap {
+		ranksObjects = append(ranksObjects, bson.M{"hand": handString, "rank": rank})
 	}
 
 	fmt.Println("inserting data into db")

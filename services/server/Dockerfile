@@ -1,4 +1,4 @@
-FROM golang:1.17.8-bullseye
+FROM golang AS builder
 
 WORKDIR /usr/src/app
 
@@ -6,9 +6,24 @@ WORKDIR /usr/src/app
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
-COPY services/server ./
+COPY application/ ./application/
+COPY services/server/ ./server
+
+WORKDIR /usr/src/app/server
+
 RUN go build -v -o /usr/local/bin/app ./...
 
-ENV PORT=8080
+FROM golang
 
-ENTRYPOINT [ "app", "ranks.json" ]
+WORKDIR /
+
+COPY --from=builder /usr/local/bin/app /usr/local/bin/app
+
+ENV PORT=8080
+ENV MONGODB_URI=mongodb://mongo:27017
+ENV DB_NAME=poker
+ENV RANKS_COLLECTION_NAME=ranks
+ENV CACHE_COLLECTION_NAME=cache
+ENV CALCULATION_TIMEOUT=120
+
+ENTRYPOINT [ "app" ]

@@ -9,13 +9,13 @@ services:
         published: 80
     environment:
     - PORT=80
-    - API_URL=http://poker-api:8080
+    - API_URL=http://poker-go-api:8080
     networks:
       - backend
   poker-go-api:
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: services/server/Dockerfile
     depends_on:
       - mongo
       - create-ranks
@@ -23,6 +23,11 @@ services:
       - backend
     environment:
       - PORT=8080
+      - MONGODB_URI=mongodb://mongo:27017
+      - DB_NAME=poker
+      - RANKS_COLLECTION_NAME=ranks
+      - CACHE_COLLECTION_NAME=cache
+      - CALCULATION_TIMEOUT=120
     ports:
       - target: 8080
         published: 8080
@@ -37,7 +42,8 @@ services:
     environment:
       - MONGODB_URI=mongodb://mongo:27017
       - DB_NAME=poker
-      - COLLECTION_NAME=ranks
+      - RANKS_COLLECTION_NAME=ranks
+      - CACHE_COLLECTION_NAME=cache
   mongo:
     image: mongo
     ports:

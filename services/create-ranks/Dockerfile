@@ -1,4 +1,4 @@
-FROM golang:1.17.8-bullseye AS generator
+FROM golang AS generator
 
 WORKDIR /usr/src/app
 
@@ -6,24 +6,38 @@ WORKDIR /usr/src/app
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
-COPY services/create-ranks/generate ./
-RUN go build -v -o /usr/local/bin/app ./...
-RUN app /data/ranks.json
+COPY application/ ./application/
+COPY services/create-ranks/generate/ ./generate
 
-FROM golang:1.17.8-bullseye
+WORKDIR /usr/src/app/generate
+
+RUN go build -v -o /usr/local/bin/app ./...
+RUN app /ranks.json
+
+FROM golang AS populator
 
 WORKDIR /usr/src/app
 
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
-COPY --from=generator /data/ranks.json ./
-COPY services/create-ranks/populate ./
+COPY application/ ./application/
+COPY services/create-ranks/populate/ ./populate
+
+WORKDIR /usr/src/app/populate
 
 RUN go build -v -o /usr/local/bin/app ./...
 
-ENV MONGODB_URI=localhost:27017
-ENV DB_NAME=poker
-ENV COLLECTION_NAME=ranks
+FROM golang
 
-ENTRYPOINT [ "app", "ranks.json" ]
+WORKDIR /
+
+COPY --from=populator /usr/local/bin/app /usr/local/bin/app
+COPY --from=generator /ranks.json /ranks.json
+
+ENV MONGODB_URI=mongodb://mongo:27017
+ENV DB_NAME=poker
+ENV RANKS_COLLECTION_NAME=ranks
+ENV CACHE_COLLECTION_NAME=cache
+
+ENTRYPOINT [ "app", "/ranks.json" ]

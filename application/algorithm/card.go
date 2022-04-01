@@ -7,12 +7,19 @@ import (
 	"gonum.org/v1/gonum/stat/combin"
 )
 
-var valMap = map[int]string{
+var ValMap = map[int]string{
 	1: "A", 2: "2", 3: "3", 4: "4", 5: "5", 6: "6", 7: "7", 8: "8", 9: "9", 10: "10", 11: "J", 12: "Q", 13: "K",
 }
+var InvertedValMap = map[string]int{
+	"A": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "J": 11, "Q": 12, "K": 13,
+}
 
-var suitMap = map[int]string{
+var SuitMap = map[int]string{
 	1: "C", 2: "D", 3: "H", 4: "S",
+}
+
+var InvertedSuitMap = map[string]int{
+	"C": 1, "D": 2, "H": 3, "S": 4,
 }
 
 type Card struct {
@@ -26,10 +33,10 @@ type Hand5 [5]Card
 type Hand7 [7]Card
 
 func (card Card) toString() string {
-	return valMap[card.Value] + suitMap[card.Suit]
+	return ValMap[card.Value] + SuitMap[card.Suit]
 }
 
-func (hand Hand) hash() string {
+func (hand Hand) Hash() string {
 	size := len(hand)
 	var stringSlice []string
 	for i := 0; i < size; i++ {

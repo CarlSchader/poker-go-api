@@ -52,12 +52,12 @@ func main() {
 		os.Exit(0)
 	}
 
-	// collection.Indexes().CreateOne(ctx, mongo.IndexModel{
-	// 	Keys: bson.M{
-	// 		"hand": 1,
-	// 	},
-	// 	Options: nil,
-	// })
+	collection.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.M{
+			"hand": 1,
+		},
+		Options: nil,
+	})
 
 	calcCollection.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys: bson.M{

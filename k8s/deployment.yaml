@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: poker-go-api
+  name: poker-go-api
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: poker-go-api
+  template:
+    metadata:
+      labels:
+        app: poker-go-api
+    spec:
+      containers:
+        - image: carlschader/poker-go-api:latest
+          name: poker-go-api
+          env:
+          - name: PORT
+            value: "80"
+          - name: MONGODB_URI
+            value: mongodb://mongo.default.svc.cluster.local:27017
+          - name: DB_NAME
+            value: poker
+          - name: RANKS_COLLECTION_NAME
+            value: ranks
+          - name: CACHE_COLLECTION_NAME
+            value: cache
+          - name: CALCULATION_TIMEOUT
+            value: "120"
+          # livenessProbe:
+          #   httpGet:
+          #     path: /health
+          #     port: 80
+          #   initialDelaySeconds: 5
+          #   timeoutSeconds: 5
+          #   periodSeconds: 60
+          #   failureThreshold: 3
+          ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP

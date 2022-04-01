@@ -42,7 +42,7 @@ publish-create-ranks:
 
 	docker buildx build \
 	--push \
-	--platform linux/amd64,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x \
+	--platform ${ARCHES} \
 	--tag ${DOCKER_HUB_USERNAME}/${CREATE_RANKS_SERVICE}:latest \
 	-f ${CREATE_RANKS_PATH} ${DOCKER_CONTEXT}
 
@@ -62,7 +62,7 @@ publish-all:
 
 	docker buildx build \
 	--push \
-	--platform linux/amd64,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x \
+	--platform ${ARCHES} \
 	--tag ${DOCKER_HUB_USERNAME}/${CREATE_RANKS_SERVICE}:latest \
 	-f ${CREATE_RANKS_PATH} ${DOCKER_CONTEXT}
 

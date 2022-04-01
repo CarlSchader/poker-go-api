@@ -17,5 +17,7 @@ spec:
           value: ranks
         - name: CACHE_COLLECTION_NAME
           value: cache
-      restartPolicy: OnFailure   
-  backoffLimit: 4
+        - name: BATCHES
+          value: "20"
+      restartPolicy: Never
+  backoffLimit: 1

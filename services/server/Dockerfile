@@ -1,4 +1,4 @@
-FROM golang AS builder
+FROM golang:alpine AS builder
 
 WORKDIR /usr/src/app
 
@@ -13,7 +13,7 @@ WORKDIR /usr/src/app/server
 
 RUN go build -v -o /usr/local/bin/app ./...
 
-FROM golang
+FROM golang:alpine
 
 WORKDIR /
 

@@ -1,4 +1,4 @@
-FROM golang AS generator
+FROM golang:alpine AS generator
 
 WORKDIR /usr/src/app
 
@@ -14,7 +14,7 @@ WORKDIR /usr/src/app/generate
 RUN go build -v -o /usr/local/bin/app ./...
 RUN app /ranks.json
 
-FROM golang AS populator
+FROM golang:alpine AS populator
 
 WORKDIR /usr/src/app
 
@@ -28,7 +28,7 @@ WORKDIR /usr/src/app/populate
 
 RUN go build -v -o /usr/local/bin/app ./...
 
-FROM golang
+FROM golang:alpine
 
 WORKDIR /
 

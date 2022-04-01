@@ -18,6 +18,6 @@ spec:
         - name: CACHE_COLLECTION_NAME
           value: cache
         - name: BATCHES
-          value: "20"
+          value: "40"
       restartPolicy: Never
   backoffLimit: 1

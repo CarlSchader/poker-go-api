@@ -6,7 +6,15 @@ import (
 
 // Comparisons
 func CardLessThan(card1, card2 Card) bool {
-	return card1.Value < card2.Value || (card1.Value == card2.Value && card1.Suit < card2.Suit)
+	val1 := card1.Value
+	val2 := card2.Value
+	if val1 != 1 && val2 != 1 || val1 == 1 && val2 == 1 {
+		return card1.Value < card2.Value || (card1.Value == card2.Value && card1.Suit < card2.Suit)
+	} else if val2 == 1 {
+		return true
+	} else {
+		return false
+	}
 }
 
 func HandLessThan(hand1 Hand, hand2 Hand) bool {

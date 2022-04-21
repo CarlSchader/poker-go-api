@@ -78,7 +78,6 @@ func main() {
 			pockets = append(pockets, result)
 			count++
 			fmt.Printf("%d of %d\n", count, TOTAL)
-			break
 		}
 	}
 

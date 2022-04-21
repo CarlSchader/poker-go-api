@@ -15,6 +15,13 @@ run:
 kill:
 	docker-compose down
 
+run-create-ranks:
+	go run services/create-ranks/generate/generate.go ranks.json
+
+run-create-pockets:
+	go run services/create-ranks/generate/generate.go ranks.json
+	go run services/create-pockets/generate/generate.go ranks.json pockets.json
+
 build:
 	docker build -t poker-go-api:latest -f ${DOCKERFILE_PATH} ${DOCKER_CONTEXT}
 

@@ -124,72 +124,67 @@ func RoyalFlushLessThan(hand1, hand2 Hand5) bool {
 }
 
 func StraightFlushLessThan(hand1, hand2 Hand5) bool {
-	return hand1[4].Value < hand2[4].Value
+	return CardLessThan(hand1[4], hand2[4])
 }
 
 func FourOfAKindLessThan(hand1, hand2 Hand5) bool {
-	if hand1[0].Value < hand2[0].Value {
-		return true
-	} else if hand1[0].Value == hand2[0].Value && hand1[4].Value < hand2[4].Value {
-		return true
+	if hand1[0].Value == hand2[0].Value {
+		return CardLessThan(hand1[4], hand2[4])
+	} else {
+		return CardLessThan(hand1[0], hand2[0])
 	}
-	return false
 }
 
 func FullHouseLessThan(hand1, hand2 Hand5) bool {
-	if hand1[0].Value < hand2[0].Value {
-		return true
-	} else if hand1[0].Value == hand2[0].Value && hand1[3].Value < hand2[3].Value {
-		return true
+	if hand1[0].Value == hand2[0].Value {
+		return CardLessThan(hand1[3], hand2[3])
+	} else {
+		return CardLessThan(hand1[0], hand2[0])
 	}
-	return false
 }
 
 func FlushLessThan(hand1, hand2 Hand5) bool {
-	return hand1[0].Value < hand2[0].Value
+	return CardLessThan(hand1[0], hand2[0])
 }
 
 func StraightLessThan(hand1, hand2 Hand5) bool {
-	return hand1[4].Value < hand2[4].Value
+	return CardLessThan(hand1[4], hand2[4])
 }
 
 func ThreeOfAKindLessThan(hand1, hand2 Hand5) bool {
-	if hand1[0].Value < hand2[0].Value {
-		return true
-	} else if hand1[0].Value == hand2[0].Value && hand1[3].Value < hand2[3].Value {
-		return true
+	if hand1[0].Value == hand2[0].Value {
+		return CardLessThan(hand1[3], hand2[3])
+	} else {
+		return CardLessThan(hand1[0], hand2[0])
 	}
-	return false
 }
 
 func TwoPairLessThan(hand1, hand2 Hand5) bool {
-	if hand1[0].Value < hand2[0].Value {
-		return true
-	} else if hand1[0].Value == hand2[0].Value {
-		if hand1[2].Value < hand2[2].Value {
-			return true
-		} else if hand1[2].Value == hand2[2].Value && hand1[4].Value < hand2[4].Value {
-			return true
+	if hand1[0].Value == hand2[0].Value {
+		if hand1[2].Value == hand2[2].Value {
+			return CardLessThan(hand1[4], hand2[4])
+		} else {
+			return CardLessThan(hand1[2], hand2[2])
 		}
+	} else {
+		return CardLessThan(hand1[0], hand2[0])
 	}
-	return false
 }
 
 func PairLessThan(hand1, hand2 Hand5) bool {
-	if hand1[0].Value < hand2[0].Value {
-		return true
-	} else if hand1[0].Value == hand2[0].Value {
-		if hand1[2].Value < hand2[2].Value {
-			return true
-		} else if hand1[2].Value == hand2[2].Value {
-			if hand1[3].Value < hand2[3].Value {
-				return true
-			} else if hand1[3].Value == hand2[3].Value && hand1[4].Value < hand2[4].Value {
-				return true
+	if hand1[0].Value == hand2[0].Value {
+		if hand1[2].Value == hand2[2].Value {
+			if hand1[3].Value == hand2[3].Value {
+				return CardLessThan(hand1[4], hand2[4])
+			} else {
+				return CardLessThan(hand1[3], hand2[3])
 			}
+		} else {
+			return CardLessThan(hand1[2], hand2[2])
 		}
+	} else {
+		return CardLessThan(hand1[0], hand2[0])
 	}
-	return false
 }
 
 func HighCardLessThan(hand1, hand2 Hand5) bool {

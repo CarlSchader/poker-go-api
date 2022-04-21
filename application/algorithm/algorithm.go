@@ -195,7 +195,7 @@ func PairLessThan(hand1, hand2 Hand5) bool {
 func HighCardLessThan(hand1, hand2 Hand5) bool {
 	for i := 0; i < 5; i++ {
 		if hand1[i].Value != hand2[i].Value {
-			return hand1[i].Value < hand2[i].Value
+			return CardLessThan(hand1[i], hand2[i])
 		}
 	}
 	return false

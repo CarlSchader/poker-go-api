@@ -1,5 +1,4 @@
 *.json
-!pockets.json
 Dockerfile
 kubernetes
 Makefile

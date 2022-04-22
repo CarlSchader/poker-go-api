@@ -17,6 +17,12 @@ type Entry struct {
 	Rank int64  `bson:"rank"`
 }
 
+type PocketEntry struct {
+	Hand             string                     `bson:"hand"`
+	Rank             int                        `bson:"rank"`
+	SimulationResult *simulate.SimulationResult `bson:"simulation_result"`
+}
+
 var client mongo.Client
 var db mongo.Database
 var cache mongo.Collection
@@ -93,4 +99,17 @@ func CacheCheck(hand algorithm.Hand, endHandSize int) (*simulate.SimulationResul
 func CacheInsert(result *simulate.SimulationResult) error {
 	_, err := cache.InsertOne(context.TODO(), *result)
 	return err
+}
+
+func GetPocket(pocket algorithm.Hand) (*simulate.SimulationResult, error) {
+	result := simulate.SimulationResult{}
+	err := cache.FindOne(context.TODO(), bson.M{"hand": pocket.Hash()}).Decode(&result)
+
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }

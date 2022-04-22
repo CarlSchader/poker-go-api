@@ -55,18 +55,6 @@ func (hand Hand5) Hash() string {
 	return strings.Join(stringSlice, "")
 }
 
-func HandToString(hand []Card) string {
-	handString := ""
-	length := len(hand)
-	for i := 0; i < length; i++ {
-		handString += hand[i].toString()
-		if i < length-1 {
-			handString += " "
-		}
-	}
-	return handString
-}
-
 func MakeDeck(exclusionSet map[Card]bool) Hand {
 	var deck Hand
 	for suit := 1; suit <= 4; suit++ {

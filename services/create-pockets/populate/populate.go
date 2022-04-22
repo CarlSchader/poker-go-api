@@ -8,28 +8,28 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
+	"github.com/carlschader/poker-go-api/application/simulate"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var size int64 = 2598960
+type PocketJson struct {
+	Rank             int                        `json:"rank" bson:"rank"`
+	SimulationResult *simulate.SimulationResult `json:"simulation_result" bson:"simulation_result"`
+}
+
+var size int64 = 1326
 
 func main() {
 	mongodbURI := os.Getenv("MONGODB_URI")
 	dbName := os.Getenv("DB_NAME")
-	collectionName := os.Getenv("RANKS_COLLECTION_NAME")
-	cacheCollectionName := os.Getenv("CACHE_COLLECTION_NAME")
-	batches, err := strconv.Atoi(os.Getenv("BATCHES"))
+	collectionName := os.Getenv("POCKETS_COLLECTION_NAME")
+	batches := 1
 
-	if err != nil {
-		log.Fatalln(errors.New("batches variable not set"))
-	}
-
-	ranksFilePath := os.Args[1]
+	pocketsFilePath := os.Args[1]
 
 	if len(os.Args) != 2 {
 		log.Fatalln(errors.New("invalid number of command line arguments (should be 1)"))
@@ -49,17 +49,6 @@ func main() {
 
 	// get collection and create handString index
 	collection := client.Database(dbName).Collection(collectionName)
-	calcCollection := client.Database(dbName).Collection(cacheCollectionName)
-	count, err := collection.CountDocuments(ctx, bson.M{})
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// exit if the ranks collection already has at least all the rank documents
-	if count >= size {
-		fmt.Println("ranks collection already populated")
-		os.Exit(0)
-	}
 
 	fmt.Println("creating indexes")
 	collection.Indexes().CreateOne(ctx, mongo.IndexModel{
@@ -69,35 +58,27 @@ func main() {
 		Options: nil,
 	})
 
-	calcCollection.Indexes().CreateOne(ctx, mongo.IndexModel{
-		Keys: bson.M{
-			"hand":          1,
-			"end_hand_size": 1,
-		},
-		Options: nil,
-	})
-
-	jsonBytes, err := ioutil.ReadFile(ranksFilePath)
+	jsonBytes, err := ioutil.ReadFile(pocketsFilePath)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	var ranksMap map[string]int
-	err = json.Unmarshal(jsonBytes, &ranksMap)
+	var pocketsMap map[string]PocketJson
+	err = json.Unmarshal(jsonBytes, &pocketsMap)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	var ranksObjects []interface{}
-	for handString, rank := range ranksMap {
-		ranksObjects = append(ranksObjects, bson.M{"hand": handString, "rank": rank})
+	var pocketsObjects []interface{}
+	for handString, entry := range pocketsMap {
+		pocketsObjects = append(pocketsObjects, bson.M{"hand": handString, "rank": entry.Rank, "simulation_results": entry.SimulationResult})
 	}
 
 	fmt.Println("inserting data into db")
 	entriesPerInsert := int(size) / batches
 	extras := int(size) % batches
 	for i := 0; i < batches; i++ {
-		_, err := collection.InsertMany(context.Background(), ranksObjects[i*entriesPerInsert:(i+1)*entriesPerInsert])
+		_, err := collection.InsertMany(context.Background(), pocketsObjects[i*entriesPerInsert:(i+1)*entriesPerInsert])
 		if err != nil {
 			fmt.Printf("Error when writing %v\n", err)
 			os.Exit(1)
@@ -106,7 +87,7 @@ func main() {
 	}
 
 	if extras > 0 {
-		_, err = collection.InsertMany(context.Background(), ranksObjects[batches*entriesPerInsert:batches*entriesPerInsert+extras])
+		_, err = collection.InsertMany(context.Background(), pocketsObjects[batches*entriesPerInsert:batches*entriesPerInsert+extras])
 		if err != nil {
 			fmt.Printf("Error when writing extras %v\n", err)
 			os.Exit(1)

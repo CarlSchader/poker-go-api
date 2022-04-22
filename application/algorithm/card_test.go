@@ -7,7 +7,7 @@ import (
 
 func TestMakeDeck(t *testing.T) {
 	deck := MakeDeck(map[Card]bool{})
-	fmt.Printf("%s\n deck size: %d\n", HandToString(deck), len(deck))
+	fmt.Printf("%s\n deck size: %d\n", deck.Hash(), len(deck))
 
 	deck = MakeDeck(map[Card]bool{
 		{2, 1}: true,
@@ -15,7 +15,7 @@ func TestMakeDeck(t *testing.T) {
 		{2, 3}: true,
 		{2, 4}: true,
 	})
-	fmt.Printf("%s\n deck size: %d\n", HandToString(deck), len(deck))
+	fmt.Printf("%s\n deck size: %d\n", deck.Hash(), len(deck))
 }
 
 func TestCardCombinations(t *testing.T) {

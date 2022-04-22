@@ -45,6 +45,18 @@ services:
       - RANKS_COLLECTION_NAME=ranks
       - CACHE_COLLECTION_NAME=cache
       - BATCHES=1
+  create-pockets:
+    build:
+      context: .
+      dockerfile: services/create-pockets/Dockerfile
+    depends_on:
+      - mongo
+    networks:
+      - backend
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017
+      - DB_NAME=poker
+      - POCKETS_COLLECTION_NAME=pockets
   mongo:
     image: mongo
     ports:

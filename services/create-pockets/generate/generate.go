@@ -7,14 +7,16 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"runtime"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/carlschader/poker-go-api/application/algorithm"
 	"github.com/carlschader/poker-go-api/application/simulate"
 )
 
-type pocketJson struct {
+type PocketJson struct {
 	Rank             int                        `json:"rank" bson:"rank"`
 	SimulationResult *simulate.SimulationResult `json:"simulation_result" bson:"simulation_result"`
 }
@@ -45,41 +47,60 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	// create hand stack
+	fmt.Println("creating possible pockets")
+	handStack := []algorithm.Hand{}
+	for hand := range algorithm.CardCombinations(deck, 2) {
+		handStack = append(handStack, hand)
+	}
+
 	// simulate pockets
-	fmt.Println("simulating pockets")
+
+	// fmt.Println("simulating pockets")
+	// var pockets []*simulate.SimulationResult
+	// count := 0
+	// for hand := range algorithm.CardCombinations(deck, 2) {
+	// 	result, err := simulate.SimulateHand(hand, 7, map[algorithm.Card]bool{}, ranksMap)
+	// 	if err != nil {
+	// 		log.Println(algorithm.HandToString(hand))
+	// 		log.Println(err)
+	// 		os.Exit(1)
+	// 	} else {
+	// 		pockets = append(pockets, result)
+	// 		count++
+	// 		fmt.Printf("%d of %d\n", count, TOTAL)
+	// 	}
+	// }
+
 	var pockets []*simulate.SimulationResult
 	count := 0
-	// var wg sync.WaitGroup
-	// for hand := range algorithm.CardCombinations(deck, 2) {
-	// 	wg.Add(1)
-	// 	go func(hand algorithm.Hand, count int, wg sync.WaitGroup) {
-	// 		defer wg.Done()
-	// 		result, err := simulate.SimulateHand(hand, 7, map[algorithm.Card]bool{}, ranksMap)
-	// 		if err != nil {
-	// 			log.Println(algorithm.HandToString(hand))
-	// 			log.Println(err)
-	// 			os.Exit(1)
-	// 		} else {
-	// 			pockets = append(pockets, result)
-	// 			count++
-	// 			fmt.Printf("%d of %d\n", count, TOTAL)
-	// 		}
-	// 	}(hand, count, wg)
-	// }
-	// wg.Wait()
-
-	for hand := range algorithm.CardCombinations(deck, 2) {
-		result, err := simulate.SimulateHand(hand, 7, map[algorithm.Card]bool{}, ranksMap)
-		if err != nil {
-			log.Println(algorithm.HandToString(hand))
-			log.Println(err)
-			os.Exit(1)
-		} else {
-			pockets = append(pockets, result)
-			count++
-			fmt.Printf("%d of %d\n", count, TOTAL)
-		}
+	cpus := runtime.NumCPU()
+	fmt.Printf("simulating pockets on %d cores \n", cpus)
+	runtime.GOMAXPROCS(cpus)
+	var wg sync.WaitGroup
+	wg.Add(cpus)
+	for i := 0; i < cpus; i++ {
+		go func() {
+			defer wg.Done()
+			for len(handStack) > 0 {
+				// pop stack
+				hand := handStack[len(handStack)-1]
+				handStack = handStack[:len(handStack)-1]
+				// calculate
+				result, err := simulate.SimulateHand(hand, 7, map[algorithm.Card]bool{}, ranksMap)
+				if err != nil {
+					log.Println(hand.Hash())
+					log.Println(err)
+					os.Exit(1)
+				} else {
+					pockets = append(pockets, result)
+					count++
+					fmt.Printf("%d of %d\n", count, TOTAL)
+				}
+			}
+		}()
 	}
+	wg.Wait()
 
 	// sort pockets
 	fmt.Println("sorting pockets")
@@ -89,9 +110,9 @@ func main() {
 
 	// write json
 	fmt.Println("writing json")
-	pocketsJsonMap := map[string]pocketJson{}
+	pocketsJsonMap := map[string]PocketJson{}
 	for i, result := range pockets {
-		pocketsJsonMap[result.Hand] = pocketJson{
+		pocketsJsonMap[result.Hand] = PocketJson{
 			i + 1,
 			result,
 		}

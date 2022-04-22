@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -83,11 +84,19 @@ func main() {
 		}
 
 		hand := queryToHand(strings.ToUpper(c.Query("hand")))
-		// shared := queryToHand(strings.ToUpper(c.Query("shared")))
+		shared := queryToHand(strings.ToUpper(c.Query("shared")))
 		endHandSize, err := strconv.Atoi(c.Query("count"))
 		if err != nil {
 			log.Println(err)
 			return err
+		}
+
+		if len(hand) != 2 {
+			return errors.New("invalid hand size. Must be two")
+		}
+
+		if len(shared) == 0 {
+
 		}
 
 		result, err := database.CacheCheck(hand, endHandSize)

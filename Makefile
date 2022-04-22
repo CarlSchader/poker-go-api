@@ -3,11 +3,13 @@
 DOCKER_HUB_USERNAME = carlschader
 SERVICE_NAME = poker-go-api
 CREATE_RANKS_SERVICE = poker-create-ranks
+CREATE_POCKETS_SERVICE = poker-create-pockets
 ARCHES = linux/amd64,linux/arm64/v8
 DOCKERFILE_PATH = services/server/Dockerfile
 DOCKER_CONTEXT = .
 
 CREATE_RANKS_PATH = services/create-ranks/Dockerfile
+CREATE_POCKETS_PATH = services/create-pockets/Dockerfile
 
 run:
 	docker-compose up --build
@@ -27,6 +29,9 @@ build:
 
 build-create-ranks:
 	docker build -t poker-create-ranks:latest -f ${CREATE_RANKS_PATH} ${DOCKER_CONTEXT}
+
+build-create-pockets:
+	docker build -t poker-create-pockets:latest -f ${CREATE_POCKETS_PATH} ${DOCKER_CONTEXT}
 
 publish:
 	docker login
@@ -56,6 +61,20 @@ publish-create-ranks:
 	docker buildx stop ${CREATE_RANKS_SERVICE}
 	docker buildx rm ${CREATE_RANKS_SERVICE}
 
+publish-create-pockets:
+	docker login
+	docker run --privileged --rm tonistiigi/binfmt --install all
+	docker buildx create --use --name ${CREATE_POCKETS_SERVICE}
+
+	docker buildx build \
+	--push \
+	--platform ${ARCHES} \
+	--tag ${DOCKER_HUB_USERNAME}/${CREATE_POCKETS_SERVICE}:latest \
+	-f ${CREATE_POCKETS_PATH} ${DOCKER_CONTEXT}
+
+	docker buildx stop ${CREATE_POCKETS_SERVICE}
+	docker buildx rm ${CREATE_POCKETS_SERVICE}
+
 publish-all:
 	docker login
 	docker run --privileged --rm tonistiigi/binfmt --install all
@@ -72,6 +91,12 @@ publish-all:
 	--platform ${ARCHES} \
 	--tag ${DOCKER_HUB_USERNAME}/${CREATE_RANKS_SERVICE}:latest \
 	-f ${CREATE_RANKS_PATH} ${DOCKER_CONTEXT}
+
+	docker buildx build \
+	--push \
+	--platform ${ARCHES} \
+	--tag ${DOCKER_HUB_USERNAME}/${CREATE_POCKETS_SERVICE}:latest \
+	-f ${CREATE_POCKETS_PATH} ${DOCKER_CONTEXT}
 
 	docker buildx stop ${SERVICE_NAME}
 	docker buildx rm ${SERVICE_NAME}

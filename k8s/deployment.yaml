@@ -29,6 +29,8 @@ spec:
             value: ranks
           - name: CACHE_COLLECTION_NAME
             value: cache
+          - name: POCKETS_COLLECTION_NAME
+            value: pockets
           - name: CALCULATION_TIMEOUT
             value: "120"
           # resources:

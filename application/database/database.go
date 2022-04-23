@@ -17,17 +17,12 @@ type Entry struct {
 	Rank int64  `bson:"rank"`
 }
 
-type PocketEntry struct {
-	Hand             string                     `bson:"hand"`
-	Rank             int                        `bson:"rank"`
-	SimulationResult *simulate.SimulationResult `bson:"simulation_result"`
-}
-
 var client mongo.Client
 var db mongo.Database
 var cache mongo.Collection
+var pockets mongo.Collection
 
-func Connect(mongodbURI string, dbName string, cacheCollectionName string) error {
+func Connect(mongodbURI string, dbName string, cacheCollectionName string, pocketsCollectionName string) error {
 	fmt.Printf("attempting to connect to %s\n", mongodbURI)
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	newClient, err := mongo.NewClient(options.Client().ApplyURI(mongodbURI))
@@ -53,6 +48,7 @@ func Connect(mongodbURI string, dbName string, cacheCollectionName string) error
 	// defer client.Disconnect(ctx)
 	db = *client.Database(dbName)
 	cache = *db.Collection(cacheCollectionName)
+	pockets = *db.Collection(pocketsCollectionName)
 
 	return nil
 }
@@ -83,17 +79,14 @@ func LoadRanks(collectionName string) (map[string]int64, error) {
 	return table, nil
 }
 
-func CacheCheck(hand algorithm.Hand, endHandSize int) (*simulate.SimulationResult, error) {
-	result := simulate.SimulationResult{}
-	err := cache.FindOne(context.TODO(), bson.M{"hand": hand.Hash(), "end_hand_size": endHandSize}).Decode(&result)
-
+func CacheCheck(hand algorithm.Hand, endHandSize int, receiver interface{}) error {
+	err := cache.FindOne(context.TODO(), bson.M{"hand": hand.Hash(), "end_hand_size": endHandSize}).Decode(receiver)
 	if err == mongo.ErrNoDocuments {
-		return nil, nil
+		return nil
 	} else if err != nil {
-		return nil, err
+		return err
 	}
-
-	return &result, nil
+	return nil
 }
 
 func CacheInsert(result *simulate.SimulationResult) error {
@@ -101,15 +94,12 @@ func CacheInsert(result *simulate.SimulationResult) error {
 	return err
 }
 
-func GetPocket(pocket algorithm.Hand) (*simulate.SimulationResult, error) {
-	result := simulate.SimulationResult{}
-	err := cache.FindOne(context.TODO(), bson.M{"hand": pocket.Hash()}).Decode(&result)
-
+func GetPocket(pocket algorithm.Hand, receiver interface{}) error {
+	err := pockets.FindOne(context.TODO(), bson.M{"hand": pocket.Hash()}).Decode(receiver)
 	if err == mongo.ErrNoDocuments {
-		return nil, nil
+		return nil
 	} else if err != nil {
-		return nil, err
+		return err
 	}
-
-	return &result, nil
+	return nil
 }

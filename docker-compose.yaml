@@ -1,7 +1,7 @@
 version: "3.5"
 services:
   poker-web:
-    image: carlschader/poker-web
+    image: carlschader/poker-web:latest
     depends_on:
       - poker-go-api
     ports:
@@ -27,6 +27,7 @@ services:
       - DB_NAME=poker
       - RANKS_COLLECTION_NAME=ranks
       - CACHE_COLLECTION_NAME=cache
+      - POCKETS_COLLECTION_NAME=pockets
       - CALCULATION_TIMEOUT=120
     ports:
       - target: 8080
@@ -58,7 +59,7 @@ services:
       - DB_NAME=poker
       - POCKETS_COLLECTION_NAME=pockets
   mongo:
-    image: mongo
+    image: mongo:latest
     ports:
       - target: 27017
         published: 27017

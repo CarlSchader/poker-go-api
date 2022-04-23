@@ -50,6 +50,9 @@ func main() {
 	// get collection and create handString index
 	collection := client.Database(dbName).Collection(collectionName)
 
+	// delete documents that are already in the collection
+	collection.DeleteMany(ctx, bson.M{})
+
 	fmt.Println("creating indexes")
 	collection.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys: bson.M{
@@ -71,7 +74,7 @@ func main() {
 
 	var pocketsObjects []interface{}
 	for handString, entry := range pocketsMap {
-		pocketsObjects = append(pocketsObjects, bson.M{"hand": handString, "rank": entry.Rank, "simulation_results": entry.SimulationResult})
+		pocketsObjects = append(pocketsObjects, bson.M{"hand": handString, "rank": entry.Rank, "simulation_result": entry.SimulationResult})
 	}
 
 	fmt.Println("inserting data into db")

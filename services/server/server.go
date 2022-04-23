@@ -17,6 +17,16 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+type PocketResponse struct {
+	Hand             string                     `json:"hand" bson:"hand"`
+	Rank             int                        `json:"rank" bson:"rank"`
+	MaxRank          int                        `json:"max_rank" bson:"max_rank"`
+	Percentile       float32                    `json:"percentile" bson:"percentile"`
+	SimulationResult *simulate.SimulationResult `json:"simulation_result" bson:"simulation_result"`
+}
+
+var ranks map[string]int64
+
 func queryToHand(handString string) algorithm.Hand {
 	hand := algorithm.Hand{}
 	for _, cardString := range strings.Split(handString, "-") {
@@ -30,14 +40,13 @@ func queryToHand(handString string) algorithm.Hand {
 	return hand
 }
 
-var ranks map[string]int64
-
 func main() {
 	port := os.Getenv("PORT")
 	mongodbURI := os.Getenv("MONGODB_URI")
 	dbName := os.Getenv("DB_NAME")
 	ranksCollectionName := os.Getenv("RANKS_COLLECTION_NAME")
 	cacheCollectionName := os.Getenv("CACHE_COLLECTION_NAME")
+	pocketsCollectionName := os.Getenv("POCKETS_COLLECTION_NAME")
 	var calculationTimeout time.Duration
 
 	if secondsInt, err := strconv.Atoi(os.Getenv("CALCULATION_TIMEOUT")); err != nil {
@@ -47,7 +56,7 @@ func main() {
 		log.Printf("timeout allowed: %v\n", calculationTimeout)
 	}
 
-	if err := database.Connect(mongodbURI, dbName, cacheCollectionName); err != nil {
+	if err := database.Connect(mongodbURI, dbName, cacheCollectionName, pocketsCollectionName); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -62,7 +71,7 @@ func main() {
 			log.Println(err)
 			if err == mongo.ErrClientDisconnected {
 				go func() {
-					if err := database.Connect(mongodbURI, dbName, cacheCollectionName); err != nil {
+					if err := database.Connect(mongodbURI, dbName, cacheCollectionName, pocketsCollectionName); err != nil {
 						log.Fatalln(err)
 					}
 				}()
@@ -91,36 +100,66 @@ func main() {
 			return err
 		}
 
+		seenCards := map[algorithm.Card]bool{}
+		for _, card := range hand {
+			if seen, ok := seenCards[card]; ok && seen {
+				return c.JSON("invalid hand")
+			}
+			seenCards[card] = true
+		}
+		for _, card := range shared {
+			if seen, ok := seenCards[card]; ok && seen {
+				return c.JSON("invalid hand")
+			}
+			seenCards[card] = true
+		}
+
 		if len(hand) != 2 {
 			return errors.New("invalid hand size. Must be two")
 		}
 
 		if len(shared) == 0 {
-
-		}
-
-		result, err := database.CacheCheck(hand, endHandSize)
-
-		if result == nil && err == nil {
-			log.Println("calculation not cached yet")
-			result, err = simulate.SimulateHand(hand, endHandSize, map[algorithm.Card]bool{}, ranks)
+			var result PocketResponse
+			err := database.GetPocket(hand, &result)
 			if err != nil {
 				log.Println(err)
 				return err
 			}
+			result.MaxRank = 1326
+			result.Percentile = (float32(result.Rank) / float32(result.MaxRank)) * 100.0
+			log.Printf("calculation time: %v", time.Since(startTime))
+			return c.JSON(result)
+		} else {
+			var joinedHand algorithm.Hand
+			for _, card := range hand {
+				joinedHand = append(joinedHand, card)
+			}
+			for _, card := range shared {
+				joinedHand = append(joinedHand, card)
+			}
 
-			err = database.CacheInsert(result)
-			if err != nil {
+			var result *simulate.SimulationResult
+			err := database.CacheCheck(joinedHand, endHandSize, &result)
+			if result == nil && err == nil {
+				log.Println("calculation not cached yet")
+				result, err = simulate.SimulateHand(joinedHand, endHandSize, map[algorithm.Card]bool{}, ranks)
+				if err != nil {
+					log.Println(err)
+					return err
+				}
+
+				err = database.CacheInsert(result)
+				if err != nil {
+					log.Println(err)
+					return err
+				}
+			} else if err != nil {
 				log.Println(err)
 				return err
 			}
-		} else if err != nil {
-			log.Println(err)
-			return err
+			log.Printf("calculation time: %v", time.Since(startTime))
+			return c.JSON(result)
 		}
-
-		log.Printf("calculation time: %v", time.Since(startTime))
-		return c.JSON(result)
 	})
 
 	app.Get("/health", func(c *fiber.Ctx) error {
